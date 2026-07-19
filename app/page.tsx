@@ -5,6 +5,7 @@ import { DEMO_PROFILES } from "@/lib/demo";
 import { COUNTRIES, byCode, computeBadges, percentile, type Country } from "@/lib/countries";
 import { loadProfile, saveProfile, visitedCodes, emptyProfile, type Profile, type Trip } from "@/lib/store";
 import { renderCard } from "@/lib/card";
+import { AuthButton } from "@/components/Auth";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -35,6 +36,9 @@ export default function Home() {
           <p className="text-sm tracking-[0.3em] text-[#d9b26a]">MY TRAVEL PASSPORT</p>
           <h1 className="mt-1 text-3xl font-bold">{profile.name || "นักเดินทาง"}</h1>
           {profile.bio && <p className="mt-1 text-sm opacity-70">{profile.bio}</p>}
+          <div className="mt-3 flex justify-center">
+            <AuthButton />
+          </div>
         </header>
 
         {tab === "profile" && <ProfileTab profile={profile} update={update} visited={visited} badges={badges} />}

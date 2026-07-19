@@ -27,6 +27,9 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_BASE_PATH: /travel-flex-card
+          NEXT_PUBLIC_SUPABASE_URL: https://ntyklsrcbbcyvkjufnfu.supabase.co
+          # publishable key — safe to expose, backend protected by RLS
+          NEXT_PUBLIC_SUPABASE_KEY: sb_publishable_2R8vD9ZwDsmWdb52irbg2A_yzSAV5Ts
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
