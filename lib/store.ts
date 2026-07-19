@@ -16,6 +16,12 @@ export type Expense = {
   splitWith: string[]; // people sharing this expense (includes payer)
 };
 
+export type ChecklistItem = {
+  id: string;
+  text: string;
+  done: boolean;
+};
+
 export type Trip = {
   id: string;
   kind: "past" | "upcoming";
@@ -27,12 +33,16 @@ export type Trip = {
   memory: string; // past: ความทรงจำ / upcoming: โน้ต
   itinerary?: ItineraryItem[];
   expenses?: Expense[];
+  wishlist?: ChecklistItem[];
+  todos?: ChecklistItem[];
 };
 
 export type Profile = {
   name: string;
   handle: string;
   bio: string;
+  avatarSeed?: string; // pixel character variant
+
   extraCountries: string[]; // ticked without a trip entry
   trips: Trip[];
 };

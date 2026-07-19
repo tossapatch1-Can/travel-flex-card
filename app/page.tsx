@@ -7,6 +7,7 @@ import { loadProfile, saveProfile, visitedCodes, emptyProfile, type Profile, typ
 import { renderCard } from "@/lib/card";
 import { AuthButton } from "@/components/Auth";
 import { TripWorkspace } from "@/components/TripWorkspace";
+import { PixelAvatar } from "@/components/PixelAvatar";
 import { supabase } from "@/lib/supabase";
 import { pullCloudProfile, pushCloudProfile, hasContent } from "@/lib/sync";
 
@@ -60,7 +61,18 @@ export default function Home() {
       <div className="mx-auto max-w-xl px-4 pb-28 pt-8">
         <header className="mb-6 text-center">
           <p className="text-sm tracking-[0.3em] text-[#d9b26a]">MY TRAVEL PASSPORT</p>
-          <h1 className="mt-1 text-3xl font-bold">{profile.name || "นักเดินทาง"}</h1>
+          <div className="mt-3 flex flex-col items-center">
+            <div className="rounded-2xl bg-white/5 p-2">
+              <PixelAvatar seed={profile.avatarSeed || profile.name || "traveler"} size={88} />
+            </div>
+            <button
+              onClick={() => update({ ...profile, avatarSeed: Math.random().toString(36).slice(2, 10) })}
+              className="mt-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] opacity-80"
+            >
+              🎲 สุ่มร่างใหม่
+            </button>
+          </div>
+          <h1 className="mt-2 text-3xl font-bold">{profile.name || "นักเดินทาง"}</h1>
           {profile.bio && <p className="mt-1 text-sm opacity-70">{profile.bio}</p>}
           <div className="mt-3 flex justify-center">
             <AuthButton />

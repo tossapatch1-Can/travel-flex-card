@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { Expense, ItineraryItem, Trip } from "@/lib/store";
+import type { ChecklistItem, Expense, ItineraryItem, Trip } from "@/lib/store";
 import { byCode } from "@/lib/countries";
 import { loadProfile } from "@/lib/store";
 import { shareUrl } from "@/lib/share";
@@ -13,7 +13,7 @@ export function TripWorkspace({ trip, onChange, onClose }: {
   onChange: (t: Trip) => void;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState<"itinerary" | "expenses" | "map">("itinerary");
+  const [tab, setTab] = useState<"itinerary" | "expenses" | "map" | "wishlist" | "todo" | "members">("itinerary");
   const [copied, setCopied] = useState(false);
   const people = [ME, ...trip.companions];
 
@@ -53,18 +53,21 @@ export function TripWorkspace({ trip, onChange, onClose }: {
           </div>
         </div>
 
-        <div className="flex border-b border-white/10 px-5">
+        <div className="flex gap-1 overflow-x-auto border-b border-white/10 px-5">
           {(
             [
               ["itinerary", "📅 Itinerary"],
               ["expenses", "💰 Expenses"],
               ["map", "🗺️ Maps"],
+              ["wishlist", "❤️ Wishlist"],
+              ["todo", "✅ To-do"],
+              ["members", "👥 Members"],
             ] as const
           ).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex-1 pb-2 text-sm ${tab === key ? "border-b-2 border-[#d9b26a] font-semibold text-[#d9b26a]" : "opacity-60"}`}
+              className={`shrink-0 whitespace-nowrap px-2 pb-2 text-sm ${tab === key ? "border-b-2 border-[#d9b26a] font-semibold text-[#d9b26a]" : "opacity-60"}`}
             >
               {label}
             </button>
@@ -75,6 +78,23 @@ export function TripWorkspace({ trip, onChange, onClose }: {
           {tab === "itinerary" && <ItineraryTab trip={trip} onChange={onChange} />}
           {tab === "expenses" && <ExpensesTab trip={trip} onChange={onChange} people={people} />}
           {tab === "map" && <MapTab trip={trip} />}
+          {tab === "wishlist" && (
+            <ChecklistTab
+              items={trip.wishlist ?? []}
+              onChange={(items) => onChange({ ...trip, wishlist: items })}
+              placeholder="อยากไป/อยากทำอะไร เช่น Blue Lagoon"
+              empty="ยังไม่มี wishlist — จดที่อยากไป อยากกิน อยากทำ ไว้ก่อนเลย ❤️"
+            />
+          )}
+          {tab === "todo" && (
+            <ChecklistTab
+              items={trip.todos ?? []}
+              onChange={(items) => onChange({ ...trip, todos: items })}
+              placeholder="ต้องทำอะไร เช่น จองตั๋วเครื่องบิน"
+              empty="ยังไม่มีรายการ — จดของที่ต้องเตรียม/ต้องจองไว้ที่นี่ ✅"
+            />
+          )}
+          {tab === "members" && <MembersTab trip={trip} onChange={onChange} />}
         </div>
       </div>
     </div>
@@ -313,6 +333,91 @@ function MapTab({ trip }: { trip: Trip }) {
       >
         เปิด {places[active]} ใน Google Maps ↗
       </a>
+    </div>
+  );
+}
+
+/* ---------- ❤️ Wishlist / ✅ To-do (shared checklist) ---------- */
+function ChecklistTab({ items, onChange, placeholder, empty }: {
+  items: ChecklistItem[];
+  onChange: (items: ChecklistItem[]) => void;
+  placeholder: string;
+  empty: string;
+}) {
+  const [text, setText] = useState("");
+  const add = () => {
+    if (!text.trim()) return;
+    onChange([...items, { id: uid(), text: text.trim(), done: false }]);
+    setText("");
+  };
+  const toggle = (id: string) => onChange(items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)));
+  const remove = (id: string) => onChange(items.filter((i) => i.id !== id));
+  const doneCount = items.filter((i) => i.done).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder}
+          onKeyDown={(e) => e.key === "Enter" && add()}
+          className="min-w-0 flex-1 rounded-lg bg-white/10 px-3 py-2 text-sm outline-none placeholder:opacity-40" />
+        <button onClick={add} className="rounded-lg bg-[#d9b26a] px-4 text-sm font-semibold text-[#0f2027]">เพิ่ม</button>
+      </div>
+      {items.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-white/20 p-6 text-center text-sm opacity-60">{empty}</p>
+      ) : (
+        <>
+          <p className="text-xs opacity-60">เสร็จแล้ว {doneCount}/{items.length}</p>
+          <div className="space-y-1.5">
+            {items.map((i) => (
+              <div key={i.id} className="flex items-center gap-3 rounded-lg bg-white/5 p-3 text-sm">
+                <button onClick={() => toggle(i.id)} className="text-lg">
+                  {i.done ? "✅" : "⬜"}
+                </button>
+                <span className={i.done ? "line-through opacity-50" : ""}>{i.text}</span>
+                <button onClick={() => remove(i.id)} className="ml-auto text-xs opacity-40">ลบ</button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ---------- 👥 Members ---------- */
+function MembersTab({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void }) {
+  const [name, setName] = useState("");
+  const add = () => {
+    const n = name.trim();
+    if (!n || trip.companions.includes(n)) return;
+    onChange({ ...trip, companions: [...trip.companions, n] });
+    setName("");
+  };
+  const remove = (n: string) => onChange({ ...trip, companions: trip.companions.filter((c) => c !== n) });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="ชื่อเพื่อนร่วมทริป"
+          onKeyDown={(e) => e.key === "Enter" && add()}
+          className="min-w-0 flex-1 rounded-lg bg-white/10 px-3 py-2 text-sm outline-none placeholder:opacity-40" />
+        <button onClick={add} className="rounded-lg bg-[#d9b26a] px-4 text-sm font-semibold text-[#0f2027]">เพิ่ม</button>
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-3 rounded-lg bg-[#d9b26a]/10 p-3 text-sm">
+          <span>🧑‍✈️</span>
+          <span className="font-semibold">{ME}</span>
+          <span className="ml-auto text-xs opacity-50">เจ้าของทริป</span>
+        </div>
+        {trip.companions.map((c) => (
+          <div key={c} className="flex items-center gap-3 rounded-lg bg-white/5 p-3 text-sm">
+            <span>🧳</span>
+            <span>{c}</span>
+            <button onClick={() => remove(c)} className="ml-auto text-xs opacity-40">ลบ</button>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs opacity-50">สมาชิกจะไปโผล่ในตัวเลือก &quot;จ่ายโดย/หารกับ&quot; ของแท็บ Expenses อัตโนมัติ</p>
     </div>
   );
 }
