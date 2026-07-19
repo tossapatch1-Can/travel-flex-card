@@ -1,5 +1,21 @@
 "use client";
 
+export type ItineraryItem = {
+  id: string;
+  day: number; // 1-based
+  time: string; // "09:00" or ""
+  place: string;
+  note: string;
+};
+
+export type Expense = {
+  id: string;
+  title: string;
+  amount: number;
+  paidBy: string; // person name ("ฉัน" or companion)
+  splitWith: string[]; // people sharing this expense (includes payer)
+};
+
 export type Trip = {
   id: string;
   kind: "past" | "upcoming";
@@ -9,6 +25,8 @@ export type Trip = {
   endDate: string;
   companions: string[];
   memory: string; // past: ความทรงจำ / upcoming: โน้ต
+  itinerary?: ItineraryItem[];
+  expenses?: Expense[];
 };
 
 export type Profile = {

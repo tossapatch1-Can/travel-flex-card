@@ -6,6 +6,7 @@ import { COUNTRIES, byCode, computeBadges, percentile, type Country } from "@/li
 import { loadProfile, saveProfile, visitedCodes, emptyProfile, type Profile, type Trip } from "@/lib/store";
 import { renderCard } from "@/lib/card";
 import { AuthButton } from "@/components/Auth";
+import { TripWorkspace } from "@/components/TripWorkspace";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -215,6 +216,7 @@ function Stat({ n, label }: { n: number; label: string }) {
 /* ---------- ทริป ---------- */
 function TripsTab({ profile, update }: { profile: Profile; update: (p: Profile) => void }) {
   const [editing, setEditing] = useState<Trip | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const past = profile.trips.filter((t) => t.kind === "past");
   const upcoming = profile.trips.filter((t) => t.kind === "upcoming");
 
@@ -224,6 +226,7 @@ function TripsTab({ profile, update }: { profile: Profile; update: (p: Profile) 
     setEditing(null);
   };
   const remove = (id: string) => update({ ...profile, trips: profile.trips.filter((t) => t.id !== id) });
+  const openTrip = profile.trips.find((t) => t.id === openId) ?? null;
 
   return (
     <div className="space-y-6">
@@ -242,16 +245,18 @@ function TripsTab({ profile, update }: { profile: Profile; update: (p: Profile) 
         </button>
       </div>
 
-      <TripList title="🗓️ กำลังจะไป" trips={upcoming} onEdit={setEditing} onRemove={remove} empty="ยังไม่มีแผน — เพิ่มทริปที่จะไปได้เลย" />
-      <TripList title="📸 ความทรงจำที่ผ่านมา" trips={past} onEdit={setEditing} onRemove={remove} empty="ยังไม่มีทริปเก่า — เพิ่มทริปแรกของคุณเลย" />
+      <TripList title="🗓️ กำลังจะไป" trips={upcoming} onEdit={setEditing} onRemove={remove} onOpen={setOpenId} empty="ยังไม่มีแผน — เพิ่มทริปที่จะไปได้เลย" />
+      <TripList title="📸 ความทรงจำที่ผ่านมา" trips={past} onEdit={setEditing} onRemove={remove} onOpen={setOpenId} empty="ยังไม่มีทริปเก่า — เพิ่มทริปแรกของคุณเลย" />
 
       {editing && <TripEditor trip={editing} onSave={save} onClose={() => setEditing(null)} />}
+      {openTrip && <TripWorkspace trip={openTrip} onChange={save} onClose={() => setOpenId(null)} />}
     </div>
   );
 }
 
-function TripList({ title, trips, onEdit, onRemove, empty }: {
-  title: string; trips: Trip[]; onEdit: (t: Trip) => void; onRemove: (id: string) => void; empty: string;
+function TripList({ title, trips, onEdit, onRemove, onOpen, empty }: {
+  title: string; trips: Trip[]; onEdit: (t: Trip) => void; onRemove: (id: string) => void;
+  onOpen: (id: string) => void; empty: string;
 }) {
   return (
     <section>
@@ -278,6 +283,12 @@ function TripList({ title, trips, onEdit, onRemove, empty }: {
                     <button onClick={() => onRemove(t.id)} className="rounded-full bg-white/10 px-3 py-1 opacity-60">ลบ</button>
                   </div>
                 </div>
+                <button
+                  onClick={() => onOpen(t.id)}
+                  className="mt-3 w-full rounded-lg border border-[#d9b26a]/50 py-2 text-xs font-semibold text-[#d9b26a]"
+                >
+                  📅 Itinerary · 💰 Expenses · 🗺️ Maps — เปิดทริป
+                </button>
                 {t.companions.length > 0 && (
                   <p className="mt-2 text-sm">
                     👥 {t.kind === "upcoming" ? "ไปด้วยกัน: " : "ไปกับ: "}
