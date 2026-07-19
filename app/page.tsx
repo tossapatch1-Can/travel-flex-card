@@ -1,5 +1,7 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DEMO_PROFILES } from "@/lib/demo";
 import { COUNTRIES, byCode, computeBadges, percentile, type Country } from "@/lib/countries";
 import { loadProfile, saveProfile, visitedCodes, emptyProfile, type Profile, type Trip } from "@/lib/store";
 import { renderCard } from "@/lib/card";
@@ -159,6 +161,24 @@ function ProfileTab({ profile, update, visited, badges }: {
           value={profile.bio}
           onChange={(e) => update({ ...profile, bio: e.target.value })}
         />
+      </section>
+
+      <section>
+        <h2 className="mb-2 font-semibold">👀 ส่องโปรไฟล์เพื่อนนักเดินทาง</h2>
+        <div className="space-y-2">
+          {DEMO_PROFILES.map((p) => (
+            <Link key={p.handle} href={`/u/${p.handle}`} className="flex items-center gap-3 rounded-xl bg-white/5 p-3">
+              <span className="text-2xl">{p.countries.length >= 9 ? "🌌" : p.countries.length >= 8 ? "🧳" : "🥾"}</span>
+              <div className="min-w-0">
+                <p className="font-semibold text-[#d9b26a]">
+                  {p.name} <span className="text-xs font-normal opacity-60">@{p.handle}</span>
+                </p>
+                <p className="truncate text-xs opacity-70">{p.bio}</p>
+              </div>
+              <span className="ml-auto shrink-0 text-xs opacity-50">{p.countries.length} ประเทศ →</span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {picking && (
