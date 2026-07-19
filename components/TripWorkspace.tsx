@@ -2,6 +2,8 @@
 import { useMemo, useState } from "react";
 import type { Expense, ItineraryItem, Trip } from "@/lib/store";
 import { byCode } from "@/lib/countries";
+import { loadProfile } from "@/lib/store";
+import { shareUrl } from "@/lib/share";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const ME = "ฉัน";
@@ -12,7 +14,19 @@ export function TripWorkspace({ trip, onChange, onClose }: {
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<"itinerary" | "expenses" | "map">("itinerary");
+  const [copied, setCopied] = useState(false);
   const people = [ME, ...trip.companions];
+
+  const share = async () => {
+    const url = shareUrl({ name: loadProfile().name, trip });
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      prompt("คัดลอกลิงก์นี้ส่งให้เพื่อน:", url);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center" onClick={onClose}>
@@ -30,7 +44,13 @@ export function TripWorkspace({ trip, onChange, onClose }: {
               <p className="text-xs opacity-60">👥 {[ME, ...trip.companions].join(" · ")}</p>
             )}
           </div>
-          <button onClick={onClose} className="opacity-60">✕</button>
+          <div className="flex shrink-0 items-center gap-3">
+            <button onClick={share}
+              className="rounded-lg bg-[#d9b26a]/20 px-3 py-1.5 text-xs font-semibold text-[#d9b26a]">
+              {copied ? "คัดลอกแล้ว ✓" : "🔗 แชร์ทริป"}
+            </button>
+            <button onClick={onClose} className="opacity-60">✕</button>
+          </div>
         </div>
 
         <div className="flex border-b border-white/10 px-5">
