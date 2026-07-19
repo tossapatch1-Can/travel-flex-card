@@ -7,6 +7,8 @@ import { loadProfile, saveProfile, visitedCodes, emptyProfile, type Profile, typ
 import { renderCard } from "@/lib/card";
 import { AuthButton } from "@/components/Auth";
 import { TripWorkspace } from "@/components/TripWorkspace";
+import { supabase } from "@/lib/supabase";
+import { pullCloudProfile, pushCloudProfile, hasContent } from "@/lib/sync";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -14,15 +16,38 @@ export default function Home() {
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [tab, setTab] = useState<"profile" | "trips" | "card">("profile");
   const [ready, setReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [synced, setSynced] = useState(false);
 
   useEffect(() => {
     setProfile(loadProfile());
     setReady(true);
+    const { data: sub } = supabase().auth.onAuthStateChange((_e, session) => {
+      setUserId(session?.user?.id ?? null);
+      if (!session?.user) setSynced(false);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
+
+  // on login: cloud profile wins if it has content, otherwise upload local
+  useEffect(() => {
+    if (!userId || synced) return;
+    (async () => {
+      const cloud = await pullCloudProfile(userId);
+      if (hasContent(cloud)) {
+        setProfile(cloud!);
+        saveProfile(cloud!);
+      } else {
+        pushCloudProfile(userId, loadProfile());
+      }
+      setSynced(true);
+    })();
+  }, [userId, synced]);
 
   const update = (p: Profile) => {
     setProfile(p);
     saveProfile(p);
+    if (userId) pushCloudProfile(userId, p);
   };
 
   const visited = useMemo(() => visitedCodes(profile), [profile]);
@@ -40,6 +65,9 @@ export default function Home() {
           <div className="mt-3 flex justify-center">
             <AuthButton />
           </div>
+          {userId && synced && (
+            <p className="mt-1.5 text-[11px] text-emerald-300/80">☁️ ข้อมูลซิงค์กับ cloud แล้ว — เปิดเครื่องไหนก็เจอ</p>
+          )}
         </header>
 
         {tab === "profile" && <ProfileTab profile={profile} update={update} visited={visited} badges={badges} />}
