@@ -54,11 +54,27 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
   const oauth = async (provider: "google" | "github") => {
     setErr("");
+    const label = provider === "google" ? "Google" : "GitHub";
+    // check the provider is actually enabled before redirecting,
+    // otherwise the user lands on a raw JSON 400 page
+    try {
+      const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const res = await fetch(`${base}/auth/v1/settings`, {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_KEY ?? "" },
+      });
+      const settings = await res.json();
+      if (!settings?.external?.[provider]) {
+        setErr(`เข้าสู่ระบบด้วย ${label} ยังไม่เปิดใช้งาน — ใช้อีเมลไปก่อนได้เลยครับ ✉️`);
+        return;
+      }
+    } catch {
+      /* settings unreachable — fall through and try anyway */
+    }
     const { error } = await supabase().auth.signInWithOAuth({
       provider,
       options: { redirectTo: window.location.origin + (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + "/" },
     });
-    if (error) setErr(`เข้าสู่ระบบด้วย ${provider === "google" ? "Google" : "GitHub"} ยังไม่พร้อมใช้งาน`);
+    if (error) setErr(`เข้าสู่ระบบด้วย ${label} ยังไม่พร้อมใช้งาน`);
   };
 
   const sendEmail = async () => {
