@@ -134,6 +134,94 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
                       {t.photos.map((ph) => ph.caption).join(" · ")} — photos: Wikimedia Commons
                     </p>
                   )}
+
+                  {t.itinerary && t.itinerary.length > 0 && (
+                    <div className="mt-4 border-t border-white/10 pt-3">
+                      <h3 className="mb-2 text-sm font-semibold text-[#d9b26a]">📅 Itinerary</h3>
+                      {[...new Set(t.itinerary.map((x) => x.day))].map((d) => (
+                        <div key={d} className="mb-2">
+                          <p className="mb-1 text-xs font-semibold opacity-70">Day {d}</p>
+                          <div className="space-y-1">
+                            {t.itinerary!
+                              .filter((x) => x.day === d)
+                              .map((x, j) => (
+                                <div key={j} className="flex items-start gap-2 rounded-lg bg-white/5 px-3 py-2 text-xs">
+                                  <span className="w-10 shrink-0 opacity-60">{x.time}</span>
+                                  <div>
+                                    <span className="font-medium">{x.place}</span>
+                                    {x.note && <span className="opacity-60"> — {x.note}</span>}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {t.expenses && t.expenses.length > 0 && (() => {
+                    const total = t.expenses!.reduce((s, e) => s + e.amount, 0);
+                    const people = [...new Set(t.expenses!.flatMap((e) => [e.paidBy, ...e.splitWith]))];
+                    const bal: Record<string, number> = {};
+                    people.forEach((p) => (bal[p] = 0));
+                    t.expenses!.forEach((e) => {
+                      bal[e.paidBy] += e.amount;
+                      e.splitWith.forEach((p) => (bal[p] -= e.amount / e.splitWith.length));
+                    });
+                    return (
+                      <div className="mt-4 border-t border-white/10 pt-3">
+                        <h3 className="mb-2 text-sm font-semibold text-[#d9b26a]">💰 Expenses</h3>
+                        <div className="mb-2 rounded-lg bg-[#d9b26a]/10 p-2 text-center">
+                          <span className="text-xs text-[#d9b26a]/80">รวมทั้งทริป </span>
+                          <span className="font-bold text-[#d9b26a]">฿{total.toLocaleString()}</span>
+                          <span className="text-xs opacity-60"> · เฉลี่ย ฿{Math.round(total / people.length).toLocaleString()}/คน</span>
+                        </div>
+                        <div className="space-y-1">
+                          {t.expenses!.map((e, j) => (
+                            <div key={j} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-1.5 text-xs">
+                              <span>{e.title} <span className="opacity-50">({e.paidBy} จ่าย)</span></span>
+                              <span className="font-semibold">฿{e.amount.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {people.map((p) => {
+                            const b = Math.round(bal[p]);
+                            return (
+                              <span key={p} className={`rounded-full px-2.5 py-1 text-[11px] ${b > 0 ? "bg-emerald-500/15 text-emerald-300" : b < 0 ? "bg-red-500/15 text-red-300" : "bg-white/10 opacity-60"}`}>
+                                {p}: {b > 0 ? `รับคืน ฿${b.toLocaleString()}` : b < 0 ? `จ่ายเพิ่ม ฿${(-b).toLocaleString()}` : "พอดี ✓"}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {t.itinerary && t.itinerary.length > 0 && (
+                    <div className="mt-4 border-t border-white/10 pt-3">
+                      <h3 className="mb-2 text-sm font-semibold text-[#d9b26a]">🗺️ Maps</h3>
+                      <iframe
+                        title={`map-${i}`}
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(t.itinerary[t.itinerary.length - 1].place + " " + (byCode[t.countryCodes[0]]?.en ?? ""))}&z=6&output=embed`}
+                        className="h-52 w-full rounded-xl border-0"
+                        loading="lazy"
+                      />
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[...new Set(t.itinerary.map((x) => x.place))].map((pl) => (
+                          <a
+                            key={pl}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pl)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-full bg-white/10 px-2.5 py-1 text-[11px]"
+                          >
+                            📍 {pl}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

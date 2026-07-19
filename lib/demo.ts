@@ -8,6 +8,8 @@ export type DemoTrip = {
   companions: string[];
   memory: string;
   photos: { src: string; caption: string }[];
+  itinerary?: { day: number; time: string; place: string; note: string }[];
+  expenses?: { title: string; amount: number; paidBy: string; splitWith: string[] }[];
 };
 
 export type DemoProfile = {
@@ -38,6 +40,25 @@ export const DEMO_PROFILES: DemoProfile[] = [
           { src: `${BASE}/demo/kirkjufell.jpg`, caption: "Kirkjufell" },
           { src: `${BASE}/demo/skogafoss.jpg`, caption: "Skógafoss" },
           { src: `${BASE}/demo/aurora.jpg`, caption: "Aurora night" },
+        ],
+        itinerary: [
+          { day: 1, time: "16:20", place: "Keflavík Airport", note: "รับรถเช่า 4x4 แล้วขับเข้า Reykjavík" },
+          { day: 1, time: "19:30", place: "Reykjavík", note: "เช็คอิน + ล็อบสเตอร์ซุปร้าน Sæta Svínið" },
+          { day: 2, time: "09:00", place: "Þingvellir National Park", note: "จุดแรกของ Golden Circle" },
+          { day: 2, time: "13:00", place: "Geysir", note: "รอ Strokkur พุ่งทุก ~8 นาที" },
+          { day: 2, time: "15:00", place: "Gullfoss", note: "น้ำตกทองคำ ลมแรงมาก เตรียมกันหนาว" },
+          { day: 3, time: "10:00", place: "Seljalandsfoss", note: "เดินหลังม่านน้ำตกได้ เปียกแน่นอน" },
+          { day: 3, time: "13:30", place: "Skógafoss", note: "ขึ้นบันได 527 ขั้นไปดูวิวด้านบน" },
+          { day: 3, time: "16:00", place: "Reynisfjara Black Sand Beach", note: "ระวังคลื่น sneaker wave ห้ามยืนใกล้" },
+          { day: 4, time: "11:00", place: "Jökulsárlón Glacier Lagoon", note: "ล่องเรือชมภูเขาน้ำแข็ง + Diamond Beach" },
+          { day: 5, time: "14:00", place: "Kirkjufell", note: "จุดถ่ายแสงเหนือที่ดีที่สุดของทริป — คืนนี้ฟ้าเปิด!" },
+        ],
+        expenses: [
+          { title: "ค่าเช่ารถ 4x4 (10 วัน)", amount: 36000, paidBy: "อาร์ม", splitWith: ["อาร์ม", "มายด์", "เจมส์"] },
+          { title: "ที่พัก 9 คืน", amount: 81000, paidBy: "มายด์", splitWith: ["อาร์ม", "มายด์", "เจมส์"] },
+          { title: "น้ำมัน + ค่าทางด่วน", amount: 9600, paidBy: "เจมส์", splitWith: ["อาร์ม", "มายด์", "เจมส์"] },
+          { title: "ล่องเรือ Glacier Lagoon", amount: 10500, paidBy: "อาร์ม", splitWith: ["อาร์ม", "มายด์", "เจมส์"] },
+          { title: "ค่ากินรวมทั้งทริป", amount: 27000, paidBy: "เจมส์", splitWith: ["อาร์ม", "มายด์", "เจมส์"] },
         ],
       },
       {
